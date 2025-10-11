@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>实时对话系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body class="subpage-bg">
+    <h2>实时对话系统</h2>
+    <div class="video-page-container">
+        <!-- 左侧视频显示 -->
+        <div class="video-display">
+            <video id="chatVideo" controls width="420">
+                <source src="{{ url_for('static', filename='videos/sample.mp4') }}" type="video/mp4">
+            </video>
+        </div>
+
+        <!-- 右侧参数区 -->
+        <div class="form-section">
+            <form id="chatForm">
+                <div class="form-group">
+                    <label>模型名称</label>
+                    <select name="model_name">
+                        <option value="dialogue1">Dialogue Model 1</option>
+                        <option value="dialogue2">Dialogue Model 2</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>模型参数地址</label>
+                    <input type="text" name="model_param" placeholder="请输入参数路径">
+                </div>
+
+                <div class="form-group">
+                    <label>参考音频地址</label>
+                    <input type="text" name="ref_audio" placeholder="请输入音频路径">
+                </div>
+
+                <div class="form-group">
+                    <label>语音克隆模型名称</label>
+                    <select name="voice_clone">
+                        <option value="cloneA">Voice Clone A</option>
+                        <option value="cloneB">Voice Clone B</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>对话API选择</label>
+                    <select name="api_choice">
+                        <option value="openai">OpenAI API</option>
+                        <option value="azure">Azure Speech API</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="generate-btn">🎤 开始对话</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('chatForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            fetch('/chat_system', {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const videoEl = document.getElementById('chatVideo');
+                        const newSrc = data.video_path + '?t=' + new Date().getTime();
+                        videoEl.src = newSrc;
+                        videoEl.load();
+                        videoEl.play();
+                        alert('对话完成！');
+                    }
+                })
+                .catch(err => console.error('错误:', err));
+        });
+    </script>
+</body>
+
+</html>
