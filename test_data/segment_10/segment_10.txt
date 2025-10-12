@@ -1,1 +1,0 @@
-audio_feature_diversity: 9.760621
