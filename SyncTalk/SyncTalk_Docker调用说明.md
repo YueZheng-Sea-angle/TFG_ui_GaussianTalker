@@ -1,16 +1,16 @@
 # SyncTalk Docker 调用说明
 
-## 导入Docker镜像
-```bash
-docker load -i synctalk.tar
-```
 
 ## 构建Docker镜像
 ```bash
-cd SyncTalk
+cd SyncTalk # 包含 SyncTalk 全部代码和预训练模型的仓库根目录
 docker build -t synctalk -f Dockerfile .
 ```
 
+## 从tar导入Docker镜像
+```bash
+docker load -i synctalk.tar
+```
 ## 脚本文件
 
 `run_synctalk.sh`
@@ -66,7 +66,7 @@ docker build -t synctalk -f Dockerfile .
 ### train_only - 仅模型训练
 ```bash
 ./run_synctalk.sh train_only \
-    --video_name <视频名称> \
+    --video_path <视频文件路径> \
     --gpu <GPU设备> \
     --epochs <训练轮数>
 ```
@@ -75,7 +75,7 @@ docker build -t synctalk -f Dockerfile .
 
 **示例：**
 ```bash
-./run_synctalk.sh train_only --video_name my_video --gpu GPU0 --epochs 80
+./run_synctalk.sh train_only --video_path ./training_video.mp4 --gpu GPU0 --epochs 80
 ```
 
 ### infer - 视频推理
@@ -108,6 +108,15 @@ docker build -t synctalk -f Dockerfile .
 ### 推理完成后
 - **音频目录**: `SyncTalk/audio/{音频}`
 - **输出视频**: `SyncTalk/model/{视频名称}_ep{轮数}/results/{视频名称}_ep{轮数}_{音频名称}.mp4`
+
+## 测试模式
+在不构建 Docker 镜像的情况下测试脚本逻辑：
+
+```bash
+# 启用测试模式
+TEST_MODE=1 ./run_synctalk.sh train --video_path ./test.mp4 --gpu GPU0 --epochs 10
+TEST_MODE=1 ./run_synctalk.sh infer --model_dir test_ep10 --audio_path ./test.wav
+```
 
 **示例：**
 ```

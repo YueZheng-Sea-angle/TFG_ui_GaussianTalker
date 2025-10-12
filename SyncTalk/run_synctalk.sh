@@ -131,7 +131,7 @@ preprocess_only() {
     local synctalk_abs=$(realpath "$SYNCTALK_DIR")
     
     # 执行预处理（分别挂载data目录）
-    docker run --rm $gpu_param \
+    mock_docker run --rm $gpu_param \
         -v "$synctalk_abs/data:$WORKSPACE/data" \
         $IMAGE_NAME \
         python data_utils/process.py \
@@ -145,15 +145,15 @@ preprocess_only() {
 
 # 仅训练函数
 train_only() {
-    local video_name=""
+    local video_path=""
     local gpu_arg="GPU0"
     local epochs="140"
     
     # 解析参数
     while [[ $# -gt 0 ]]; do
         case $1 in
-            --video_name)
-                video_name="$2"
+            --video_path)
+                video_path="$2"
                 shift 2
                 ;;
             --gpu)
@@ -172,8 +172,8 @@ train_only() {
         esac
     done
     
-    if [ -z "$video_name" ]; then
-        echo "错误: 必须指定视频名称(--video_name)"
+    if [ -z "$video_path" ]; then
+        echo "错误: 必须指定视频路径(--video_path)"
         usage
         exit 1
     fi
@@ -181,6 +181,7 @@ train_only() {
     # 确保目录结构
     ensure_synctalk_dirs
 
+    local video_name=$(get_basename "$video_path")
     local data_dir="$SYNCTALK_DIR/data/${video_name}"
     
     if [ ! -d "$data_dir" ]; then
@@ -192,6 +193,9 @@ train_only() {
     # 生成模型目录名（videoName_epN）
     local model_dir_name=$(generate_model_dir_name "$video_name" "$epochs")
     local model_dir="$SYNCTALK_DIR/model/${model_dir_name}"
+    
+    # 创建模型目录
+    mkdir -p "$model_dir"
     
     # 解析GPU参数
     local gpu_param=$(parse_gpu_arg "$gpu_arg")
@@ -216,7 +220,7 @@ train_only() {
     
     # 分别挂载data和model目录
     echo "第一阶段训练..."
-    docker run --rm $gpu_param \
+    mock_docker run --rm $gpu_param \
         -v "$synctalk_abs/data:$WORKSPACE/data" \
         -v "$synctalk_abs/model:$WORKSPACE/model" \
         $IMAGE_NAME \
@@ -232,7 +236,7 @@ train_only() {
     
     # 第二阶段微调
     echo "第二阶段微调..."
-    docker run --rm $gpu_param \
+    mock_docker run --rm $gpu_param \
         -v "$synctalk_abs/data:$WORKSPACE/data" \
         -v "$synctalk_abs/model:$WORKSPACE/model" \
         $IMAGE_NAME \
@@ -285,9 +289,6 @@ train() {
         exit 1
     fi
     
-    # 获取视频名称
-    local video_name=$(get_basename "$video_path")
-    
     echo "开始完整训练流程..."
     
     # 1. 首先进行预处理
@@ -296,7 +297,7 @@ train() {
     
     # 2. 然后进行训练
     echo "步骤2: 模型训练"
-    train_only --video_name "$video_name" --gpu "$gpu_arg" --epochs "$epochs"
+    train_only --video_path "$video_path" --gpu "$gpu_arg" --epochs "$epochs"
     
     echo "完整训练流程完成!"
     echo "SyncTalk目录: $SYNCTALK_DIR"
@@ -420,7 +421,7 @@ infer() {
     local synctalk_abs=$(realpath "$SYNCTALK_DIR")
     
     # 执行推理
-    docker run --rm $gpu_param \
+    mock_docker run --rm $gpu_param \
         -v "$synctalk_abs/data:$WORKSPACE/data" \
         -v "$synctalk_abs/model:$WORKSPACE/model" \
         -v "$synctalk_abs/audio:$WORKSPACE/audio" \
