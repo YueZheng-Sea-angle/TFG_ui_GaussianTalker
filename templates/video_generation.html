@@ -30,8 +30,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>模型参数地址</label>
-                    <input type="text" name="model_param" placeholder="请输入模型参数路径">
+                    <label>模型目录地址</label>
+                    <input type="text" name="model_param" placeholder="请输入模型目录路径（格式: 视频名称_ep轮数）">
                 </div>
 
                 <div class="form-group">
@@ -44,6 +44,14 @@
                     <select name="voice_clone">
                         <option value="clone1">Voice Clone 1</option>
                         <option value="clone2">Voice Clone 2</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>GPU选择</label>
+                    <select name="gpu_choice">
+                        <option value="GPU0">GPU 0</option>
+                        <option value="GPU1">GPU 1</option>
                     </select>
                 </div>
 

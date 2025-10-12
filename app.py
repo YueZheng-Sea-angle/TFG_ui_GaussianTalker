@@ -20,6 +20,7 @@ def video_generation():
             "model_param": request.form.get('model_param'),
             "ref_audio": request.form.get('ref_audio'),
             "voice_clone": request.form.get('voice_clone'),
+            "gpu_choice": request.form.get('gpu_choice'),
             "target_text": request.form.get('target_text'),
         }
 
@@ -72,4 +73,4 @@ def chat_system():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port = 5001)

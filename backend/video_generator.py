@@ -1,5 +1,6 @@
 import os
 import time
+import subprocess
 
 def generate_video(data):
     """
@@ -9,14 +10,59 @@ def generate_video(data):
     for k, v in data.items():
         print(f"  {k}: {v}")
 
+    if data['model_name'] == "SyncTalk":
+        try:
+            # 构建命令
+            cmd = [
+                './SyncTalk/run_synctalk.sh', 'infer',
+                '--model_dir', data['model_param'],
+                '--audio_path', data['ref_audio'],
+                '--gpu', data['gpu_choice']
+            ]
+
+            print(f"[backend.video_generator] 执行命令: {' '.join(cmd)}")
+            # 执行命令
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                check=True
+            )
+            
+            print("命令标准输出:", result.stdout)
+            if result.stderr:
+                print("命令标准错误:", result.stderr)
+
+            model_dir_name = os.path.basename(data['model_param'])
+            audio_name = os.path.splitext(os.path.basename(data['ref_audio']))[0]
+            video_filename = f"{model_dir_name}_{audio_name}.mp4"
+            video_path = f"./SyncTalk/model/{data['model_param']}/results/{video_filename}"
+            # 检查文件是否存在
+            if os.path.exists(video_path):
+                print(f"[backend.video_generator] 视频生成完成，路径：{video_path}")
+                return video_path
+            else:
+                print(f"[backend.video_generator] 视频文件不存在: {video_path}")
+                # 尝试查找任何新生成的mp4文件
+                results_dir = f"./SyncTalk/model/{data['model_param']}/results/"
+                if os.path.exists(results_dir):
+                    mp4_files = [f for f in os.listdir(results_dir) if f.endswith('.mp4')]
+                    if mp4_files:
+                        latest_file = max(mp4_files, key=lambda f: os.path.getctime(os.path.join(results_dir, f)))
+                        video_path = os.path.join(results_dir, latest_file)
+                        print(f"[backend.video_generator] 找到最新视频文件: {video_path}")
+                        return video_path
+                
+                return os.path.join("static", "videos", "error.mp4")
+            
+        except subprocess.CalledProcessError as e:
+            print(f"[backend.video_generator] 命令执行失败: {e}")
+            print("错误输出:", e.stderr)
+            return os.path.join("static", "videos", "error.mp4")
+        except Exception as e:
+            print(f"[backend.video_generator] 其他错误: {e}")
+            return os.path.join("static", "videos", "error.mp4")
     
-    if data['model_choice'] == "SyncTalk":
-        # 模拟视频生成过程
-        time.sleep(2)
-
-    # 假设我们后端生成了视频：output.mp4
-    # 实际中你可以将模型生成结果保存到这里
     video_path = os.path.join("static", "videos", "out.mp4")
-
     print(f"[backend.video_generator] 视频生成完成，路径：{video_path}")
     return video_path
