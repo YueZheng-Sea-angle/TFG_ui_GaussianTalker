@@ -36,7 +36,7 @@ def generate_video(data):
             model_dir_name = os.path.basename(data['model_param'])
             audio_name = os.path.splitext(os.path.basename(data['ref_audio']))[0]
             video_filename = f"{model_dir_name}_{audio_name}.mp4"
-            video_path = f"./SyncTalk/model/{data['model_param']}/results/{video_filename}"
+            video_path = f"./{data['model_param']}/results/{video_filename}"
             # 检查文件是否存在
             if os.path.exists(video_path):
                 print(f"[backend.video_generator] 视频生成完成，路径：{video_path}")
@@ -44,7 +44,7 @@ def generate_video(data):
             else:
                 print(f"[backend.video_generator] 视频文件不存在: {video_path}")
                 # 尝试查找任何新生成的mp4文件
-                results_dir = f"./SyncTalk/model/{data['model_param']}/results/"
+                results_dir = f"./{data['model_param']}/results/"
                 if os.path.exists(results_dir):
                     mp4_files = [f for f in os.listdir(results_dir) if f.endswith('.mp4')]
                     if mp4_files:
@@ -53,15 +53,15 @@ def generate_video(data):
                         print(f"[backend.video_generator] 找到最新视频文件: {video_path}")
                         return video_path
                 
-                return os.path.join("static", "videos", "error.mp4")
+                return os.path.join("static", "videos", "out.mp4")
             
         except subprocess.CalledProcessError as e:
             print(f"[backend.video_generator] 命令执行失败: {e}")
             print("错误输出:", e.stderr)
-            return os.path.join("static", "videos", "error.mp4")
+            return os.path.join("static", "videos", "out.mp4")
         except Exception as e:
             print(f"[backend.video_generator] 其他错误: {e}")
-            return os.path.join("static", "videos", "error.mp4")
+            return os.path.join("static", "videos", "out.mp4")
     
     video_path = os.path.join("static", "videos", "out.mp4")
     print(f"[backend.video_generator] 视频生成完成，路径：{video_path}")
