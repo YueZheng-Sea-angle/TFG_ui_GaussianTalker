@@ -71,6 +71,9 @@ ensure_synctalk_dirs() {
     mkdir -p "$SYNCTALK_DIR/data"
     mkdir -p "$SYNCTALK_DIR/model"
     mkdir -p "$SYNCTALK_DIR/audio"
+    
+    chown $USER_ID:$GROUP_ID "$SYNCTALK_DIR" 2>/dev/null || true
+    chmod 755 "$SYNCTALK_DIR"
     echo "SyncTalk目录结构已创建: $SYNCTALK_DIR"
 }
 
