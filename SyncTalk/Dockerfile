@@ -21,6 +21,8 @@ RUN apt-get update && apt-get install -y \
     python3.8-dev \
     python3-pip \
     python3.8-venv \
+    python3-tk \
+    tk-dev \
     ffmpeg \
     libsm6 \
     libxext6 \
@@ -50,20 +52,23 @@ WORKDIR /SyncTalk
 # 克隆SyncTalk仓库
 COPY . .
 
+# # 克隆预训练模型
+# COPY ./.cache/checkpoints /root/.cache/torch/hub/checkpoints
+
 # 安装依赖
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu113
-# RUN pip install --no-index --find-links packages \
+# RUN pip install --no-index --find-links ./packages \
 #     torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 --extra-index-url https://download.pytorch.org/whl/cu113
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install -r requirements.txt
-# RUN pip install --no-index --find-links packages \
+# RUN pip install --no-index --find-links ./packages \
 #     -r requirements.txt
 RUN pip install --no-index --no-cache-dir pytorch3d \
     -f https://dl.fbaipublicfiles.com/pytorch3d/packaging/wheels/py38_cu113_pyt1121/download.html
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip install tensorflow-gpu==2.8.1
-# RUN pip install --no-index --find-links packages \
+# RUN pip install --no-index --find-links ./packages \
 #     tensorflow-gpu==2.8.1
 
 # 安装本地包

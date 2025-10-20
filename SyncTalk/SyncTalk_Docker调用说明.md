@@ -81,20 +81,20 @@ docker load -i synctalk.tar
 ### infer - 视频推理
 ```bash
 ./run_synctalk.sh infer \
-    --model_dir <模型目录名称> \
+    --model_dir <模型目录路径> \
     --audio_path <音频文件路径> \
     --gpu <GPU设备>
 ```
 
 **参数说明：**
-- `--model_dir`: 模型目录名称（格式: `视频名称_ep轮数`）
+- `--model_dir`: 模型目录路径（模型名称格式: `视频名称_ep轮数`）
 - `--audio_path`: 驱动音频文件路径
 - `--gpu`: GPU设备
 
 **示例：**
 ```bash
 ./run_synctalk.sh infer \
-    --model_dir my_video_ep50 \
+    --model_dir ./SyncTalk/model/my_video_ep50 \
     --audio_path ./speech.wav \
     --gpu GPU0
 ```
