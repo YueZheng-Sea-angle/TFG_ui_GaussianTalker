@@ -8,10 +8,6 @@ IMAGE_NAME="synctalk:latest"
 WORKSPACE="/SyncTalk"
 SYNCTALK_DIR="./SyncTalk"  # 宿主机SyncTalk目录
 
-# 获取当前用户ID和组ID
-USER_ID=$(id -u)
-GROUP_ID=$(id -g)
-
 # 测试模式开关
 TEST_MODE=${TEST_MODE:-0}
 
@@ -71,9 +67,6 @@ ensure_synctalk_dirs() {
     mkdir -p "$SYNCTALK_DIR/data"
     mkdir -p "$SYNCTALK_DIR/model"
     mkdir -p "$SYNCTALK_DIR/audio"
-    
-    chown $USER_ID:$GROUP_ID "$SYNCTALK_DIR" 2>/dev/null || true
-    chmod 755 "$SYNCTALK_DIR"
     echo "SyncTalk目录结构已创建: $SYNCTALK_DIR"
 }
 
@@ -132,14 +125,13 @@ preprocess_only() {
 
     # 复制原视频到数据目录
     echo "复制原视频文件..."
-    rsync -u "$video_path" "$data_dir/"
+    cp "$video_path" "$data_dir/"
     
     # 获取SyncTalk目录的绝对路径
     local synctalk_abs=$(realpath "$SYNCTALK_DIR")
     
     # 执行预处理（分别挂载data目录）
-    mock_docker run -u $USER_ID:$GROUP_ID \
-        --rm $gpu_param \
+    mock_docker run --rm $gpu_param \
         -v "$synctalk_abs/data:$WORKSPACE/data" \
         $IMAGE_NAME \
         python data_utils/process.py \
@@ -228,8 +220,7 @@ train_only() {
     
     # 分别挂载data和model目录
     echo "第一阶段训练..."
-    mock_docker run -u $USER_ID:$GROUP_ID \
-        --rm $gpu_param \
+    mock_docker run --rm $gpu_param \
         -v "$synctalk_abs/data:$WORKSPACE/data" \
         -v "$synctalk_abs/model:$WORKSPACE/model" \
         $IMAGE_NAME \
@@ -245,8 +236,7 @@ train_only() {
     
     # 第二阶段微调
     echo "第二阶段微调..."
-    mock_docker run -u $USER_ID:$GROUP_ID \
-        --rm $gpu_param \
+    mock_docker run --rm $gpu_param \
         -v "$synctalk_abs/data:$WORKSPACE/data" \
         -v "$synctalk_abs/model:$WORKSPACE/model" \
         $IMAGE_NAME \
@@ -372,7 +362,7 @@ infer() {
     
     # 生成输出文件名：${model_dir}_${audio_name}.mp4
     local output_filename="${model_dir_name}_${audio_name}.mp4"
-    local results_dir="$model_dir/results"
+    local results_dir="$model_dir/result"
     
     # 从model_dir中提取video_name（假设格式为 videoName_epN）
     local video_name=$(echo "$model_dir_name" | sed 's/_ep[0-9]*$//')
@@ -424,15 +414,14 @@ infer() {
     
     # 复制音频文件到数据目录（确保容器内可以访问）
     echo "复制音频文件到数据目录..."
-    rsync -u "$audio_path" "$audio_dir/"
+    cp "$audio_path" "$audio_dir/"
     local audio_filename=$(basename "$audio_path")
     
     # 获取SyncTalk目录的绝对路径
     local synctalk_abs=$(realpath "$SYNCTALK_DIR")
     
     # 执行推理
-    mock_docker run -u $USER_ID:$GROUP_ID \
-        --rm $gpu_param \
+    mock_docker run --rm $gpu_param \
         -v "$synctalk_abs/data:$WORKSPACE/data" \
         -v "$synctalk_abs/model:$WORKSPACE/model" \
         -v "$synctalk_abs/audio:$WORKSPACE/audio" \
