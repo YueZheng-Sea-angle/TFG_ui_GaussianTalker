@@ -56,7 +56,6 @@ def chat_system():
         data = {
             "model_name": request.form.get('model_name'),
             "model_param": request.form.get('model_param'),
-            "ref_audio": request.form.get('ref_audio'),
             "voice_clone": request.form.get('voice_clone'),
             "api_choice": request.form.get('api_choice'),
         }
@@ -67,6 +66,23 @@ def chat_system():
         return jsonify({'status': 'success', 'video_path': video_path})
 
     return render_template('chat_system.html')
+
+@app.route('/save_audio', methods=['POST'])
+def save_audio():
+    if 'audio' not in request.files:
+        return jsonify({'status': 'error', 'message': '没有音频文件'})
+    
+    audio_file = request.files['audio']
+    if audio_file.filename == '':
+        return jsonify({'status': 'error', 'message': '没有选择文件'})
+    
+    # 确保目录存在
+    os.makedirs('./static/audios', exist_ok=True)
+    
+    # 保存文件
+    audio_file.save('./static/audios/input.wav')
+    
+    return jsonify({'status': 'success', 'message': '音频保存成功'})
 
 
 if __name__ == '__main__':
