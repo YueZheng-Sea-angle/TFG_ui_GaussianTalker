@@ -362,7 +362,7 @@ infer() {
     
     # 生成输出文件名：${model_dir}_${audio_name}.mp4
     local output_filename="${model_dir_name}_${audio_name}.mp4"
-    local results_dir="$model_dir/result"
+    local results_dir="$model_dir/results"
     
     # 从model_dir中提取video_name（假设格式为 videoName_epN）
     local video_name=$(echo "$model_dir_name" | sed 's/_ep[0-9]*$//')

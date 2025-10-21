@@ -31,20 +31,12 @@
 
                 <div class="form-group">
                     <label>模型目录地址</label>
-                    <input type="text" name="model_param" placeholder="请输入模型目录路径（格式: 视频名称_ep轮数）">
+                    <input type="text" name="model_param" placeholder="请输入模型目录路径">
                 </div>
 
                 <div class="form-group">
                     <label>参考音频地址</label>
                     <input type="text" name="ref_audio" placeholder="请输入音频路径">
-                </div>
-
-                <div class="form-group">
-                    <label>语音克隆模型名称</label>
-                    <select name="voice_clone">
-                        <option value="clone1">Voice Clone 1</option>
-                        <option value="clone2">Voice Clone 2</option>
-                    </select>
                 </div>
                 
                 <div class="form-group">
@@ -80,7 +72,7 @@
                     console.log("后端返回:", data);
                     if (data.status === 'success') {
                         const videoEl = document.getElementById('outputVideo');
-                        const newSrc = data.video_path + '?t=' + new Date().getTime(); // ✅ 防止缓存
+                        const newSrc = data.video_path + '?t=' + new Date().getTime();
                         videoEl.src = newSrc;
                         videoEl.load();
                         videoEl.play().catch(err => console.warn('自动播放被阻止:', err));

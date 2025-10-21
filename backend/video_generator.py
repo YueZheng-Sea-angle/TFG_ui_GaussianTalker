@@ -1,6 +1,7 @@
 import os
 import time
 import subprocess
+import shutil
 
 def generate_video(data):
     """
@@ -12,6 +13,7 @@ def generate_video(data):
 
     if data['model_name'] == "SyncTalk":
         try:
+            
             # 构建命令
             cmd = [
                 './SyncTalk/run_synctalk.sh', 'infer',
@@ -21,37 +23,42 @@ def generate_video(data):
             ]
 
             print(f"[backend.video_generator] 执行命令: {' '.join(cmd)}")
+
             # 执行命令
             result = subprocess.run(
                 cmd,
                 capture_output=True,
-                text=True,
-                check=True
+                text=True
+                # check=True
             )
             
             print("命令标准输出:", result.stdout)
             if result.stderr:
                 print("命令标准错误:", result.stderr)
-
+            
+            # 文件原路径与目的路径 
             model_dir_name = os.path.basename(data['model_param'])
+            source_path = os.path.join("SyncTalk", "model", model_dir_name, "results", "test_audio.mp4")
             audio_name = os.path.splitext(os.path.basename(data['ref_audio']))[0]
             video_filename = f"{model_dir_name}_{audio_name}.mp4"
-            video_path = f"{data['model_param']}/results/{video_filename}"
+            destination_path = os.path.join("static", "videos", video_filename)
             # 检查文件是否存在
-            if os.path.exists(video_path):
-                print(f"[backend.video_generator] 视频生成完成，路径：{video_path}")
-                return video_path
+            if os.path.exists(source_path):
+                shutil.copy(source_path, destination_path)
+                print(f"[backend.video_generator] 视频生成完成，路径：{destination_path}")
+                return destination_path
             else:
-                print(f"[backend.video_generator] 视频文件不存在: {video_path}")
+                print(f"[backend.video_generator] 视频文件不存在: {source_path}")
                 # 尝试查找任何新生成的mp4文件
-                results_dir = f"{data['model_param']}/results/"
+                results_dir = os.path.join("SyncTalk", "model", model_dir_name, "results")
                 if os.path.exists(results_dir):
                     mp4_files = [f for f in os.listdir(results_dir) if f.endswith('.mp4')]
                     if mp4_files:
                         latest_file = max(mp4_files, key=lambda f: os.path.getctime(os.path.join(results_dir, f)))
-                        video_path = os.path.join(results_dir, latest_file)
-                        print(f"[backend.video_generator] 找到最新视频文件: {video_path}")
-                        return video_path
+                        source_path = os.path.join(results_dir, latest_file)
+                        shutil.copy(source_path, destination_path)
+                        print(f"[backend.video_generator] 找到最新视频文件: {destination_path}")
+                        return destination_path
                 
                 return os.path.join("static", "videos", "out.mp4")
             

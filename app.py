@@ -19,14 +19,11 @@ def video_generation():
             "model_name": request.form.get('model_name'),
             "model_param": request.form.get('model_param'),
             "ref_audio": request.form.get('ref_audio'),
-            "voice_clone": request.form.get('voice_clone'),
             "gpu_choice": request.form.get('gpu_choice'),
             "target_text": request.form.get('target_text'),
         }
 
         video_path = generate_video(data)
-        video_path = "/" + video_path.replace("\\", "/")
-
         return jsonify({'status': 'success', 'video_path': video_path})
 
     return render_template('video_generation.html')

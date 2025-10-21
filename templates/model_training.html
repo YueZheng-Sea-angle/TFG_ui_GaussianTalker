@@ -66,8 +66,6 @@
             const refVideoPath = formData.get('ref_video');
             const videoEl = document.getElementById('trainVideo');
 
-            console.log('获取到的视频路径:', refVideoPath); // 调试1：检查路径
-            
             if (refVideoPath) {
                 // 立即设置视频源并播放
                 const newSrc = "/" + refVideoPath.replace("\\", "/") + '?t=' + new Date().getTime();
