@@ -1,10 +1,13 @@
 .git
 .gitignore
 README.md
+assets/
 data/
 audio/
 model/
-.cache/
+adv_results/
+middl_results/
+demo/
 *.log
 __pycache__/
 *.pyc
