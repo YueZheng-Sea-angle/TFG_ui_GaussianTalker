@@ -18,6 +18,10 @@
 [前端 JS 接收到路径 → 替换 <video> 标签的 src → 自动播放视频]
 ```
 
+## 核心模块
+- **训练后端**: `./backend/model_trainer.py` - 负责调用模型执行训练任务
+- **推理后端**: `./backend/video_generator.py` - 负责调用模型执行视频生成推理
+
 ## Demo 使用方法
 
 1. 安装依赖：
