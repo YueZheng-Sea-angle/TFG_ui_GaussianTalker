@@ -125,7 +125,7 @@ preprocess_only() {
 
     # 复制原视频到数据目录
     echo "复制原视频文件..."
-    cp "$video_path" "$data_dir/"
+    rsync -u "$video_path" "$data_dir/"
     
     # 获取SyncTalk目录的绝对路径
     local synctalk_abs=$(realpath "$SYNCTALK_DIR")
@@ -414,7 +414,7 @@ infer() {
     
     # 复制音频文件到数据目录（确保容器内可以访问）
     echo "复制音频文件到数据目录..."
-    cp "$audio_path" "$audio_dir/"
+    rsync -u "$audio_path" "$audio_dir/"
     local audio_filename=$(basename "$audio_path")
     
     # 获取SyncTalk目录的绝对路径

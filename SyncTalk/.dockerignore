@@ -1,0 +1,11 @@
+.git
+.gitignore
+README.md
+data/
+audio/
+model/
+.cache/
+*.log
+__pycache__/
+*.pyc
+.DS_Store

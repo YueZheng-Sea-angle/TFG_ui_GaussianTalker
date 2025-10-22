@@ -1,16 +1,25 @@
 # SyncTalk Docker 调用说明
 
-
 ## 构建Docker镜像
 ```bash
-cd SyncTalk # 包含 SyncTalk 全部代码和预训练模型的仓库根目录
-docker build -t synctalk -f Dockerfile .
+git clone https://github.com/ZiqiaoPeng/SyncTalk.git
+cd SyncTalk
+# 将Dockerfile, .dockerignore, download_pretrained.sh移动到SyncTalk
+./download_pretrained.sh
+# 按指引下载01_MorphableModel.mat
+docker build -t synctalk .
+```
+
+## 打包Docker镜像
+```bash
+docker save -o synctalk.tar synctalk
 ```
 
 ## 从tar导入Docker镜像
 ```bash
 docker load -i synctalk.tar
 ```
+
 ## 脚本文件
 
 `run_synctalk.sh`
