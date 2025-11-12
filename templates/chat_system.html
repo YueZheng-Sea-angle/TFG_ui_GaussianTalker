@@ -205,6 +205,11 @@
             <video id="chatVideo" controls width="420">
                 <source src="{{ url_for('static', filename='videos/sample.mp4') }}" type="video/mp4">
             </video>
+            <audio id="ttsAudio" controls style="margin-top:10px; width: 100%;"></audio>
+            <div id="textOutputs" style="margin-top:12px; width:100%;">
+                <div style="margin:6px 0;"><strong>识别文本：</strong><span id="recognizedText">（待识别）</span></div>
+                <div style="margin:6px 0;"><strong>AI回复：</strong><span id="aiText">（待生成）</span></div>
+            </div>
         </div>
 
         <!-- 右侧参数区 -->
@@ -227,8 +232,10 @@
                 <div class="form-group">
                     <label>语音克隆模型名称</label>
                     <select name="voice_clone">
-                        <option value="cloneA">Voice Clone A</option>
-                        <option value="cloneB">Voice Clone B</option>
+                        <option value="off">关闭（不使用克隆）</option>
+                        <option value="use_input">使用当前录音</option>
+                        <option value="cloneA">预设音色 A</option>
+                        <option value="cloneB">预设音色 B</option>
                     </select>
                 </div>
 
@@ -362,12 +369,30 @@
                 .then(res => res.json())
                 .then(data => {
                     if (data.status === 'success') {
-                        const videoEl = document.getElementById('chatVideo');
-                        const newSrc = data.video_path + '?t=' + new Date().getTime();
-                        videoEl.src = newSrc;
-                        videoEl.load();
-                        videoEl.play();
-                        alert('对话完成！');
+                        // 文本展示
+                        const recEl = document.getElementById('recognizedText');
+                        const aiEl = document.getElementById('aiText');
+                        recEl.textContent = data.recognized_text || '（无识别文本）';
+                        aiEl.textContent = data.ai_text || '（无AI回复）';
+
+                        // 播放TTS（如有）
+                        if (data.tts_audio_url) {
+                            const ttsEl = document.getElementById('ttsAudio');
+                            ttsEl.src = data.tts_audio_url + '?t=' + new Date().getTime();
+                            ttsEl.load();
+                            ttsEl.play().catch(() => {});
+                        }
+
+                        // 刷新占位视频（可选）
+                        if (data.video_path) {
+                            const videoEl = document.getElementById('chatVideo');
+                            const newSrc = data.video_path + '?t=' + new Date().getTime();
+                            videoEl.src = newSrc;
+                            videoEl.load();
+                        }
+
+                        const statusMessage = document.getElementById('statusMessage');
+                        if (statusMessage) statusMessage.textContent = '对话完成';
                     }
                 })
                 .catch(err => console.error('错误:', err));
