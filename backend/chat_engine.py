@@ -3,6 +3,7 @@ import subprocess
 import speech_recognition as sr
 from zhipuai import ZhipuAI
 import pyttsx3
+from backend.voice_cloner import synthesize_with_clone
 
 def chat_response(data):
     """
@@ -30,8 +31,8 @@ def chat_response(data):
 
     # 大模型回答
     output_text = "./static/text/output.txt"
-    api_key = ""
-    model = "glm-4-flash"
+    api_key = "59086bcdaac941d18fd92545b7417739.OSRp1IXGkA3OMKAQ"
+    model = "glm-4.5-flash"
     ai_response = get_ai_response(input_text, output_text, api_key, model)
 
     # 文本转语音（本地 TTS）
@@ -42,6 +43,63 @@ def chat_response(data):
     video_path = os.path.join("static", "videos", "chat_response.mp4")
     print(f"[backend.chat_engine] 生成视频路径：{video_path}")
     return video_path
+
+def chat_pipeline(data):
+    os.makedirs('./static/audios', exist_ok=True)
+    os.makedirs('./static/text', exist_ok=True)
+
+    input_audio = "./static/audios/input.wav"
+    input_text = "./static/text/input.txt"
+    recognized_text = audio_to_text(input_audio, input_text)
+    if not recognized_text:
+        fallback_text = "你好，我的麦克风音频可能无效，请继续以文字方式交流。"
+        with open(input_text, 'w', encoding='utf-8') as f:
+            f.write(fallback_text)
+        recognized_text = fallback_text
+
+    output_text = "./static/text/output.txt"
+    api_key = ""
+    model = "glm-4-flash"
+    ai_response = get_ai_response(input_text, output_text, api_key, model)
+
+    # 选择TTS：优先尝试语音克隆，失败则回退到本地pyttsx3
+    output_audio = "./static/audios/ai_response.wav"
+    tts_audio_path = None
+
+    # 解析语音克隆参数
+    voice_clone = (data.get('voice_clone') or '').strip() if isinstance(data, dict) else ''
+    ref_audio_path = None
+    if voice_clone:
+        # 预设：cloneA/cloneB -> static/voices/{name}.wav
+        if voice_clone.lower() in ("clonea", "cloneb"):
+            preset_dir = os.path.join("static", "voices")
+            preset_path = os.path.join(preset_dir, f"{voice_clone}.wav")
+            if os.path.exists(preset_path):
+                ref_audio_path = preset_path
+        # 使用当前录音作为参考
+        elif voice_clone.lower() in ("use_input", "input", "current"):
+            if os.path.exists(input_audio):
+                ref_audio_path = input_audio
+        # 若传入自定义路径
+        elif os.path.exists(voice_clone):
+            ref_audio_path = voice_clone
+
+    if ref_audio_path and os.path.exists(ref_audio_path):
+        try:
+            tts_audio_path = synthesize_with_clone(ai_response, ref_audio_path, output_audio, language='zh')
+        except Exception as e:
+            print(f"[backend.chat_engine] 语音克隆失败，将回退到本地TTS。原因: {e}")
+
+    if not tts_audio_path:
+        tts_audio_path = text_to_speech(ai_response, output_audio)
+
+    video_path = os.path.join("static", "videos", "chat_response.mp4")
+    return {
+        "recognized_text": recognized_text,
+        "ai_text": ai_response,
+        "tts_audio_path": tts_audio_path if tts_audio_path else (output_audio if os.path.exists(output_audio) else None),
+        "video_path": video_path,
+    }
 
 def _ffmpeg_convert_to_pcm16_mono_16k(src_path, dst_path):
     """尝试用 ffmpeg 转为 16k/16bit mono PCM WAV。返回 True/False。"""

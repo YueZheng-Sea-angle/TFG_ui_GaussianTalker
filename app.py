@@ -4,7 +4,7 @@ import uuid
 import threading
 from backend.video_generator import generate_video
 from backend.model_trainer import train_model
-from backend.chat_engine import chat_response
+from backend.chat_engine import chat_response, chat_pipeline
 
 app = Flask(__name__)
 
@@ -84,9 +84,16 @@ def chat_system():
         }
 
         try:
-            video_path = chat_response(data)
-            video_path = "/" + video_path.replace("\\", "/")
-            return jsonify({'status': 'success', 'video_path': video_path})
+            result = chat_pipeline(data)
+            tts_url = "/" + result["tts_audio_path"].replace("\\", "/") if result.get("tts_audio_path") else None
+            video_url = "/" + result["video_path"].replace("\\", "/") if result.get("video_path") else None
+            return jsonify({
+                'status': 'success',
+                'recognized_text': result.get('recognized_text'),
+                'ai_text': result.get('ai_text'),
+                'tts_audio_url': tts_url,
+                'video_path': video_url
+            })
         except Exception as e:
             return jsonify({'status': 'error', 'message': str(e)}), 500
 
@@ -160,4 +167,4 @@ def save_audio():
 
 if __name__ == '__main__':
     # 关闭 reloader 以规避 watchdog 与 werkzeug 的不兼容导致的导入错误
-    app.run(debug=True, port = 5001)
+    app.run(debug=True, port=5001, use_reloader=False)
