@@ -25,33 +25,33 @@ docker_resources/
 
 #### pytorch-2.0.1-cuda11.7.tar
 - **文件大小**: 约 6.4GB
-- **下载链接**: [待填写]
+- **下载链接**: [https://pan.baidu.com/s/1O_qdpeQC12_ZOtRoxLUC5A 提取码: 1234]
 
 #### deepspeech-0_1_0-b90017e8.pb.zip
 - **文件大小**: 约 434MB
-- **下载链接**: [待填写]
+- **下载链接**: [https://pan.baidu.com/s/1O_qdpeQC12_ZOtRoxLUC5A 提取码: 1234]
 
 ### pretrained_weights 目录文件
 
 #### 01_MorphableModel.mat
-- **下载链接**: [待填写]
+- **下载链接**: [https://pan.baidu.com/s/1O_qdpeQC12_ZOtRoxLUC5A 提取码: 1234]
 
 #### 79999_iter.pth
-- **下载链接**: [待填写]
+- **下载链接**: [https://pan.baidu.com/s/1O_qdpeQC12_ZOtRoxLUC5A 提取码: 1234]
 
 #### alexnet-owt-7be5be79.pth
-- **下载链接**: [待填写]
+- **下载链接**: [https://pan.baidu.com/s/1O_qdpeQC12_ZOtRoxLUC5A 提取码: 1234]
 
 #### resnet18-5c106cde.pth
-- **下载链接**: [待填写]
+- **下载链接**: [https://pan.baidu.com/s/1O_qdpeQC12_ZOtRoxLUC5A 提取码: 1234]
 
 #### vgg16-397923af.pth
-- **下载链接**: [待填写]
+- **下载链接**: [https://pan.baidu.com/s/1O_qdpeQC12_ZOtRoxLUC5A 提取码: 1234]
 
 ### OpenFace 2.2.0 目录
 
 #### OpenFace 2.2.0 完整项目
-- **下载链接**: [待填写]
+- **下载链接**: [https://pan.baidu.com/s/1O_qdpeQC12_ZOtRoxLUC5A 提取码: 1234]
 - **说明**: 需要下载完整的 OpenFace 2.2.0 项目，解压后放置在 `OpenFace 2.2.0/TadasBaltrusaitis-OpenFace-658a6a1/` 目录下
 
 ## 文件处理说明
