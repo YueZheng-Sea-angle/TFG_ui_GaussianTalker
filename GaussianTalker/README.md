@@ -173,4 +173,4 @@ TFG_ui_GaussianTalker/
 本项目中的 GaussianTalker 模型经过独特优化，包括数据预处理流程改进、Docker 容器化部署等。
 
 📖 **详细文档**：
-- [GaussianTalker Docker 调用说明](./GaussianTalker/GaussianTalker_Docker调用说明.md) - 容器化部署与调用方法
+- [GaussianTalker_Docker 调用说明](./GaussianTalker_Docker调用说明.md) - 容器化部署与调用方法
