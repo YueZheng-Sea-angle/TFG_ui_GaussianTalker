@@ -1,21 +1,34 @@
-# =================================================================
 # GaussianTalker Complete Dockerfile (with OpenFace)
 # 环境: Python 3.8 | PyTorch 2.0.1 | CUDA 11.7 | OpenFace 2.2.0
 # 包含完整的训练和推理能力
 # =================================================================
+#
+# 重要：使用本地 PyTorch 镜像（避免网络问题）
+# 构建前请先运行以下命令加载本地镜像：
+#   docker load -i docker_resources/pytorch-2.0.1-cuda11.7.tar
+# 如果本地镜像不存在，Docker 会自动从 Docker Hub 拉取（可能需要 VPN）
+# =================================================================
 
 # 1. 基础镜像：使用 PyTorch 官方镜像
+# 注意：构建前需要先加载本地镜像 tar 文件：
+#   docker load -i docker_resources/pytorch-2.0.1-cuda11.7.tar
+# 或者使用构建脚本：./build_docker.sh (会自动加载)
 FROM pytorch/pytorch:2.0.1-cuda11.7-cudnn8-devel
 
 # 2. 环境变量
 ENV DEBIAN_FRONTEND=noninteractive \
     TZ=Asia/Shanghai \
-    TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;8.9+PTX" \
+    TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6" \
     PATH="/opt/conda/bin:/opt/OpenFace/build/bin:$PATH" \
     LD_LIBRARY_PATH="/opt/OpenFace/build/lib:$LD_LIBRARY_PATH" \
     PYTHONPATH=/app
 
 WORKDIR /app
+
+
+RUN sed -i 's/archive.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+    sed -i 's/security.ubuntu.com/mirrors.aliyun.com/g' /etc/apt/sources.list && \
+    apt-get update && apt-get install -y ca-certificates
 
 # 3. [系统级] 安装基础依赖
 RUN apt-get update && apt-get install -y \
@@ -34,10 +47,10 @@ RUN apt-get update && apt-get install -y \
     libopencv-dev \
     libtbb-dev \
     libboost-all-dev \
-    libdlib-dev \
     libopenblas-dev \
     liblapack-dev \
     && rm -rf /var/lib/apt/lists/*
+
 
 # 5. [系统级] 安装其他依赖
 RUN apt-get update && apt-get install -y \
@@ -53,32 +66,55 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# 6. [关键] 编译安装 OpenFace
+# Build dlib (required by OpenFace, version >= 19.13)
+# 使用 Gitee 镜像以提高国内访问速度
 RUN cd /opt && \
-    git clone https://github.com/TadasBaltrusaitis/OpenFace.git && \
-    cd OpenFace && \
-    # 检出稳定版本
-    git checkout tags/OpenFace_2.2.0 -b build || git checkout master && \
+    git clone https://gitee.com/mirrors/dlib.git && \
+    cd dlib && \
+    git checkout v19.24 && \
+    mkdir build && cd build && \
+    cmake \
+      -D CMAKE_BUILD_TYPE=Release \
+      -D CMAKE_POSITION_INDEPENDENT_CODE=ON \
+      .. && \
+    make -j$(nproc) && \
+    make install && \
+    ldconfig
+
+# 6. [关键] 编译安装 OpenFace
+RUN apt-get update && apt-get install -y \
+    libffi-dev \
+    libtiff-dev \
+    libgdal-dev \
+    libglib2.0-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY ["docker_resources/OpenFace 2.2.0/TadasBaltrusaitis-OpenFace-658a6a1", "/opt/OpenFace"]
+
+RUN cd /opt/OpenFace && \
     mkdir -p build && cd build && \
     cmake -D CMAKE_BUILD_TYPE=RELEASE \
           -D CMAKE_INSTALL_PREFIX=/opt/OpenFace/build \
           -D BUILD_SHARED_LIBS=ON \
+          -D CMAKE_SKIP_RPATH=ON \
+          -D CMAKE_INSTALL_RPATH=/opt/OpenFace/build/lib \
           .. && \
     make -j$(nproc) && \
     make install && \
-    cd / && \
-    # 清理编译临时文件
+    ldconfig && \
     rm -rf /opt/OpenFace/build/CMakeFiles
+
 
 # 验证 OpenFace 安装
 RUN FeatureExtraction -h || echo "OpenFace installed (help command may fail, but binary exists)"
 
-# 7. [Python级] 确保 Python 3.8
-RUN conda install -y python=3.8 && \
-    conda clean -ya
+# Verify Python version (already provided by base image)
+RUN python --version
 
 # 8. 升级 pip
-RUN pip install --upgrade pip setuptools wheel
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
+    pip config set global.trusted-host pypi.tuna.tsinghua.edu.cn && \
+    pip install --upgrade pip setuptools wheel
 
 # 9. 复制依赖文件
 COPY requirements.txt /app/
@@ -102,19 +138,22 @@ RUN pip install \
 # 12. 安装 TensorFlow (DeepSpeech特征提取需要)
 RUN pip install tensorflow==2.12.0
 
-# 13. [关键] 安装 PyTorch3D (使用 wheel 避免编译)
-# Python 3.8 + CUDA 11.7 + PyTorch 2.0.1 专用
-RUN pip install https://dl.fbaipublicfiles.com/pytorch3d/packaging/wheels/py38_cu117_pyt2——/pytorch3d-0.7.4-cp38-cp38-linux_x86_64.whl
+# Verify Python version (already provided by base image)
+RUN python --version
+
+# PyTorch3D for Python 3.10 + CUDA 11.7 + PyTorch 2.0.1
+RUN pip install https://dl.fbaipublicfiles.com/pytorch3d/packaging/wheels/py310_cu117_pyt201/pytorch3d-0.7.4-cp310-cp310-linux_x86_64.whl
 
 # 14. 创建预训练模型目录
 RUN mkdir -p /root/.cache/torch/hub/checkpoints && \
     mkdir -p /root/.cache/torch/hub/checkpoints/lpips && \
     mkdir -p /app/data_utils/face_tracking/3DMM && \
-    mkdir -p /app/data_utils/face_parsing
+    mkdir -p /app/data_utils/face_parsing && \
+    mkdir -p /root/.tensorflow/models
 
 # 15. 复制预训练模型
-# 方式1: 从本地 pretrained_weights/ 目录复制
-COPY pretrained_weights/ /tmp/pretrained_weights/
+# 方式1: 从本地 docker_resources/pretrained_weights/ 目录复制
+COPY docker_resources/pretrained_weights/ /tmp/pretrained_weights/
 RUN if [ -f "/tmp/pretrained_weights/resnet18-5c106cde.pth" ]; then \
         cp /tmp/pretrained_weights/*.pth /root/.cache/torch/hub/checkpoints/ 2>/dev/null || true; \
     fi && \
@@ -128,7 +167,21 @@ RUN if [ -f "/tmp/pretrained_weights/resnet18-5c106cde.pth" ]; then \
     if [ -f "/tmp/pretrained_weights/alexnet-owt-7be5be79.pth" ]; then \
         cp /tmp/pretrained_weights/alexnet-owt-7be5be79.pth /root/.cache/torch/hub/checkpoints/lpips/alex.pth 2>/dev/null || true; \
     fi && \
+    # DeepSpeech模型
+    if [ -f "/tmp/pretrained_weights/deepspeech-0_1_0-b90017e8.pb" ]; then \
+        cp /tmp/pretrained_weights/deepspeech-0_1_0-b90017e8.pb /root/.tensorflow/models/ 2>/dev/null || true; \
+    fi && \
     rm -rf /tmp/pretrained_weights
+
+# 14.5. 复制并解压 DeepSpeech 模型（如果 zip 文件存在）
+COPY docker_resources/deepspeech-0_1_0-b90017e8.pb.zip /tmp/deepspeech.zip
+RUN if [ -f "/tmp/deepspeech.zip" ]; then \
+        python -c "import zipfile; zf = zipfile.ZipFile('/tmp/deepspeech.zip'); zf.testzip()" && \
+        unzip -q /tmp/deepspeech.zip -d /root/.tensorflow/models/ && \
+        rm /tmp/deepspeech.zip && \
+        echo "✓ DeepSpeech model extracted successfully" || \
+        (echo "⚠ DeepSpeech zip file is corrupted or invalid" && rm -f /tmp/deepspeech.zip); \
+    fi
 
 # 方式2: 如果本地没有，则在线下载（备用）
 RUN if [ ! -f "/root/.cache/torch/hub/checkpoints/resnet18-5c106cde.pth" ]; then \
@@ -139,11 +192,20 @@ RUN if [ ! -f "/root/.cache/torch/hub/checkpoints/resnet18-5c106cde.pth" ]; then
 # 16. 复制源码
 COPY . /app
 
+# 16.5. 生成 3DMM_info.npy（如果 01_MorphableModel.mat 存在）
+RUN if [ -f "/app/data_utils/face_tracking/3DMM/01_MorphableModel.mat" ]; then \
+        cd /app/data_utils/face_tracking && \
+        python convert_BFM.py && \
+        echo "✓ 3DMM_info.npy generated successfully" || echo "⚠ Failed to generate 3DMM_info.npy"; \
+    else \
+        echo "⚠ 01_MorphableModel.mat not found, skipping 3DMM_info.npy generation"; \
+    fi
+
 # 17. [核心] 编译自定义 CUDA 扩展
 # 这一步必须在最后，确保所有依赖都已安装
 RUN cd /app && \
-    pip install -e submodules/custom-bg-depth-diff-gaussian-rasterization && \
-    pip install -e submodules/simple-knn && \
+    pip install --no-build-isolation -e submodules/custom-bg-depth-diff-gaussian-rasterization && \
+    pip install --no-build-isolation -e submodules/simple-knn && \
     rm -rf /app/.cache/ && \
     pip cache purge
 
@@ -166,5 +228,3 @@ RUN apt-get clean && \
 
 # 21. 默认命令
 CMD ["python", "--version"]
-
-
