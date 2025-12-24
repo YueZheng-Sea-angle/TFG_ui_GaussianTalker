@@ -1,6 +1,3 @@
-torch==1.13.1
-torchvision==0.14.1
-torchaudio==0.13.1
 mmcv==1.6.0
 matplotlib
 argparse
@@ -21,7 +18,7 @@ soundfile
 einops
 configargparse
 
-# 数据预处理优化依赖（Python 原生 AU45 提取）
-scipy>=1.7.0
-pandas>=1.3.0
-scikit-image>=0.18.0
+# 数据预处理优化依赖（Python 原生 AU45 提取，如有需要请取消注释）
+# scipy>=1.7.0
+# pandas>=1.3.0
+# scikit-image>=0.18.0
