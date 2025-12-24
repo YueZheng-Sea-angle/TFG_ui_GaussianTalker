@@ -1,5 +1,6 @@
 # GaussianTalker Docker 调用说明
-
+##重要说明
+在开始构建docker镜像前，请务必阅读[Docker构建准备指南](./Docker构建指南.md)
 ## 构建Docker镜像
 
 ```bash
