@@ -2,6 +2,15 @@
 
 基于 GaussianTalker 和 SyncTalk 的数字人视频生成系统，支持模型训练、视频生成和实时对话功能。
 
+## 📖 关键文档
+
+| 文档 | 说明 |
+|------|------|
+| [GaussianTalker Docker 调用说明](./GaussianTalker_Docker调用说明.md) | 容器化部署、脚本调用方法、前后端集成说明 |
+| [Docker 构建指南](./Docker构建指南.md) | Docker 镜像构建步骤、预训练模型配置 |
+| [语音克隆使用说明](./语音克隆使用说明.md) | XTTS v2 语音克隆功能的配置与使用 |
+
+
 ## 系统架构
 
 ```
